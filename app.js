@@ -849,6 +849,7 @@ class RACIApp {
         document.getElementById('columnId').value = '';
         document.getElementById('columnIndex').value = '';
         document.getElementById('bulkColumnMode').checked = false;
+        document.getElementById('bulkModeToggleContainer').style.display = 'block';
         document.getElementById('deleteColumnBtn').style.display = 'none';
         document.getElementById('singleColumnInputs').style.display = 'block';
         document.getElementById('bulkColumnStep1').style.display = 'none';
@@ -869,6 +870,7 @@ class RACIApp {
         document.getElementById('columnId').value = column.id;
         document.getElementById('columnIndex').value = index;
         document.getElementById('bulkColumnMode').checked = false;
+        document.getElementById('bulkModeToggleContainer').style.display = 'none';
         document.getElementById('deleteColumnBtn').style.display = 'block';
         document.getElementById('singleColumnInputs').style.display = 'block';
         document.getElementById('bulkColumnStep1').style.display = 'none';
@@ -1077,6 +1079,7 @@ class RACIApp {
         document.getElementById('rowId').value = '';
         document.getElementById('rowIndex').value = '';
         document.getElementById('bulkRowMode').checked = false;
+        document.getElementById('bulkRowModeToggleContainer').style.display = 'block';
         document.getElementById('deleteRowBtn').style.display = 'none';
         document.getElementById('singleRowInputs').style.display = 'block';
         document.getElementById('bulkRowInputs').style.display = 'none';
@@ -1110,6 +1113,7 @@ class RACIApp {
         document.getElementById('rowDescription').value = row.description || '';
         document.getElementById('rowId').value = row.id;
         document.getElementById('rowIndex').value = index;
+        document.getElementById('bulkRowModeToggleContainer').style.display = 'none';
         document.getElementById('deleteRowBtn').style.display = 'block';
         document.getElementById('bulkRowMode').checked = false;
         document.getElementById('singleRowInputs').style.display = 'block';

@@ -13,7 +13,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RACI Matrix Builder</title>
+    <title>EZ-RACI | RACI Matrix Builder</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="favicon.png">
@@ -247,7 +247,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
+                    <div class="mb-3" id="bulkModeToggleContainer">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="bulkColumnMode" onchange="app.toggleBulkColumnMode()">
                             <label class="form-check-label" for="bulkColumnMode">
@@ -351,7 +351,7 @@ Stakeholder"></textarea>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
+                    <div class="mb-3" id="bulkRowModeToggleContainer">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="bulkRowMode" onchange="app.toggleBulkRowMode()">
                             <label class="form-check-label" for="bulkRowMode">
