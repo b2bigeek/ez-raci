@@ -1990,6 +1990,12 @@ class RACIApp {
         
         document.getElementById('multiPageExportTitle').innerHTML = titles[exportType] || 'Export';
         
+        // Show/hide colored boxes option (only for PDF)
+        const coloredBoxesOption = document.getElementById('pdfColoredBoxesOption');
+        if (coloredBoxesOption) {
+            coloredBoxesOption.style.display = exportType === 'pdf' ? 'block' : 'none';
+        }
+        
         // Populate pages list
         const pagesList = document.getElementById('exportPagesList');
         pagesList.innerHTML = '';
@@ -2038,6 +2044,8 @@ class RACIApp {
         
         // Get indentation setting
         const useIndent = document.getElementById('exportWithIndent').checked;
+        const useColoredBoxes = document.getElementById('exportWithColoredBoxes') ? 
+            document.getElementById('exportWithColoredBoxes').checked : false;
         
         // Hide modal
         this.modals.multiPageExport.hide();
@@ -2048,7 +2056,7 @@ class RACIApp {
                 this.performExcelExport(selectedIndices, useIndent);
                 break;
             case 'pdf':
-                this.performPDFExport(selectedIndices, useIndent);
+                this.performPDFExport(selectedIndices, useIndent, useColoredBoxes);
                 break;
             case 'word':
                 this.performWordExport(selectedIndices, useIndent);
@@ -2836,7 +2844,7 @@ class RACIApp {
         this.showMultiPageExportModal('pdf');
     }
     
-    performPDFExport(selectedIndices, useIndent = true) {
+    performPDFExport(selectedIndices, useIndent = true, useColoredBoxes = false) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('l', 'mm', 'a4'); // Landscape orientation
 
@@ -2896,10 +2904,20 @@ class RACIApp {
                     const rowData = [indent + row.name];
                     page.columns.forEach(col => {
                         const cellValue = row.cells[col.id] || [];
-                        // Sort RACI values in correct order before joining
-                        const sortedValue = col.type === 'stakeholder' ? 
-                            this.sortRACIValues([...cellValue]) : cellValue;
-                        rowData.push(sortedValue.join(', '));
+                        if (col.type === 'stakeholder') {
+                            if (useColoredBoxes) {
+                                // Store sorted RACI values as array for custom rendering
+                                const sortedValue = this.sortRACIValues([...cellValue]);
+                                rowData.push({ raciValues: sortedValue, columnType: 'stakeholder' });
+                            } else {
+                                // Plain text mode - join with commas
+                                const sortedValue = this.sortRACIValues([...cellValue]);
+                                rowData.push(sortedValue.join(', '));
+                            }
+                        } else {
+                            // Information columns - join as before
+                            rowData.push(cellValue.join(', '));
+                        }
                     });
                     rows.push(rowData);
                 });
@@ -2922,28 +2940,17 @@ class RACIApp {
             const stakeholderCols = page.columns.filter(c => c.type === 'stakeholder').length;
             const informationCols = page.columns.filter(c => c.type === 'information').length;
             
-            const stakeholderWidth = stakeholderCols * 10; // 10% each
-            const minInfoWidth = informationCols * 10; // minimum 10% each
-            const infoRequiredPercent = (minInfoWidth / totalWidth) * 100;
-            
-            let activityWidth = 50; // Start with 50%
-            let infoTotalWidth;
-            
-            if (infoRequiredPercent > 30) {
-                // Borrow from activity column
-                const borrowAmount = infoRequiredPercent - 30;
-                activityWidth = 50 - borrowAmount;
-                infoTotalWidth = 30;
-            } else {
-                infoTotalWidth = 100 - 50 - stakeholderWidth;
-            }
-            
-            const infoWidthPerCol = informationCols > 0 ? (infoTotalWidth * totalWidth / 100) / informationCols : 0;
+            // Priority: First column + RACI columns get fixed width, info columns share remaining space
+            const stakeholderColWidth = useColoredBoxes ? 28 : 20; // Wider for colored boxes
+            const stakeholderTotalWidth = stakeholderCols * stakeholderColWidth;
+            const activityWidth = 80; // Fixed width for activity/task column
+            const remainingWidth = totalWidth - activityWidth - stakeholderTotalWidth;
+            const infoWidthPerCol = informationCols > 0 ? remainingWidth / informationCols : 0;
             
             // Build columnStyles object
             const columnStyles = {
                 0: { 
-                    cellWidth: (activityWidth * totalWidth / 100), 
+                    cellWidth: activityWidth, 
                     fontStyle: 'bold',
                     halign: 'left'
                 }
@@ -2953,14 +2960,16 @@ class RACIApp {
             page.columns.forEach((col, idx) => {
                 if (col.type === 'stakeholder') {
                     columnStyles[idx + 1] = {
-                        cellWidth: (10 * totalWidth / 100),
+                        cellWidth: stakeholderColWidth,
                         halign: 'center',
                         fontStyle: 'bold'
                     };
                 } else {
                     columnStyles[idx + 1] = {
                         cellWidth: infoWidthPerCol,
-                        halign: 'left'
+                        halign: 'left',
+                        cellPadding: { top: 2, right: 2, bottom: 2, left: 2 },
+                        overflow: 'linebreak' // Enable text wrapping
                     };
                 }
             });
@@ -2980,6 +2989,13 @@ class RACIApp {
                         const colIndex = data.column.index - 1;
                         if (page.columns[colIndex].type === 'information') {
                             data.cell.styles.fillColor = [52, 152, 219];
+                        }
+                    }
+                    
+                    // Handle RACI cells - convert object to empty string for text rendering (only if colored boxes enabled)
+                    if (useColoredBoxes && data.row.section === 'body' && data.column.index > 0) {
+                        if (data.cell.raw && typeof data.cell.raw === 'object' && data.cell.raw.columnType === 'stakeholder') {
+                            data.cell.text = [''];  // Clear text, we'll draw manually
                         }
                     }
                     
@@ -3014,6 +3030,74 @@ class RACIApp {
                             data.cell.styles.fillColor = colors.bg;
                             data.cell.styles.textColor = colors.text;
                             data.cell.styles.fontStyle = 'bold';
+                        }
+                    }
+                },
+                didDrawCell: (data) => {
+                    // Draw colored RACI badges in stakeholder columns (only if enabled)
+                    if (useColoredBoxes && data.row.section === 'body' && data.column.index > 0) {
+                        const cellData = data.row.raw[data.column.index];
+                        if (cellData && typeof cellData === 'object' && cellData.columnType === 'stakeholder') {
+                            const raciValues = cellData.raciValues || [];
+                            
+                            // RACI color mapping (RGB)
+                            const raciColors = {
+                                'R': { bg: [39, 174, 96], border: [34, 153, 84] },    // Green
+                                'A': { bg: [231, 76, 60], border: [192, 57, 43] },    // Red
+                                'C': { bg: [52, 152, 219], border: [41, 128, 185] },  // Blue
+                                'I': { bg: [155, 89, 182], border: [142, 68, 173] }   // Purple
+                            };
+                            
+                            const letters = ['R', 'A', 'C', 'I'];
+                            const badgeWidth = 6;
+                            const badgeHeight = 5;
+                            const gap = 1;
+                            const totalWidth = letters.length * badgeWidth + (letters.length - 1) * gap;
+                            const startX = data.cell.x + (data.cell.width - totalWidth) / 2;
+                            const startY = data.cell.y + (data.cell.height - badgeHeight) / 2;
+                            
+                            letters.forEach((letter, index) => {
+                                const x = startX + index * (badgeWidth + gap);
+                                const y = startY;
+                                const isSelected = raciValues.includes(letter);
+                                
+                                if (isSelected) {
+                                    // Draw colored badge for selected RACI value
+                                    const colors = raciColors[letter];
+                                    
+                                    // Fill background
+                                    doc.setFillColor(colors.bg[0], colors.bg[1], colors.bg[2]);
+                                    doc.rect(x, y, badgeWidth, badgeHeight, 'F');
+                                    
+                                    // Draw border
+                                    doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+                                    doc.setLineWidth(0.2);
+                                    doc.rect(x, y, badgeWidth, badgeHeight, 'S');
+                                    
+                                    // Draw letter in white
+                                    doc.setTextColor(255, 255, 255);
+                                    doc.setFontSize(8);
+                                    doc.setFont(undefined, 'bold');
+                                    doc.text(letter, x + badgeWidth / 2, y + badgeHeight / 2 + 1.5, { align: 'center' });
+                                } else {
+                                    // Draw gray badge for unselected
+                                    doc.setFillColor(224, 224, 224);
+                                    doc.rect(x, y, badgeWidth, badgeHeight, 'F');
+                                    
+                                    doc.setDrawColor(208, 208, 208);
+                                    doc.setLineWidth(0.2);
+                                    doc.rect(x, y, badgeWidth, badgeHeight, 'S');
+                                    
+                                    doc.setTextColor(153, 153, 153);
+                                    doc.setFontSize(8);
+                                    doc.setFont(undefined, 'normal');
+                                    doc.text(letter, x + badgeWidth / 2, y + badgeHeight / 2 + 1.5, { align: 'center' });
+                                }
+                            });
+                            
+                            // Reset text color for other cells
+                            doc.setTextColor(0, 0, 0);
+                            doc.setFont(undefined, 'normal');
                         }
                     }
                 }
