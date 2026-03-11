@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RACI Matrix Builder</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-table-cells"></i> EZ-RACI
+            </span>
+            <div class="d-flex gap-2 align-items-center">
+                <div class="btn-group">
+                    <button class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" id="projectSwitcherBtn" title="Switch Project">
+                        <i class="fas fa-folder-open"></i> <span id="currentProjectDisplay">New RACI Project</span>
+                    </button>
+                    <ul class="dropdown-menu" id="projectList">
+                        <!-- Projects will be populated here -->
+                    </ul>
+                </div>
+                <input type="text" id="projectName" class="form-control" placeholder="Project Name" style="max-width: 250px;">
+            </div>
+        </div>
+    </nav>
+
+    <!-- Menu Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+        <div class="container-fluid">
+            <ul class="navbar-nav">
+                <!-- Sidebar Toggle -->
+                <li class="nav-item">
+                    <button class="btn btn-link nav-link" onclick="app.toggleSidebar()" id="menuToggleBtn" title="Toggle Sidebar">
+                        <i class="fas fa-chevron-left" id="menuToggleIcon"></i>
+                    </button>
+                </li>
+                
+                <!-- Project Menu -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="projectMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-folder"></i> Project
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="projectMenu">
+                        <li><a class="dropdown-item" href="#" onclick="app.newProject(); return false;">
+                            <i class="fas fa-file"></i> New
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="app.importProject(); return false;">
+                            <i class="fas fa-folder-open"></i> Open
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="app.importFromExcel(); return false;">
+                            <i class="fas fa-file-excel"></i> Import Excel/CSV
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="app.exportJSON(); return false;">
+                            <i class="fas fa-save"></i> Save (RACI)
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="app.saveAsRaci(); return false;">
+                            <i class="fas fa-file-signature"></i> Save As (RACI with new name)
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="app.closeProject(); return false;">
+                            <i class="fas fa-times"></i> Close
+                        </a></li>
+                    </ul>
+                </li>
+                
+                <!-- Export Menu -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="exportMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-export"></i> Export
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="exportMenu">
+                        <li><a class="dropdown-item" href="#" onclick="app.exportToCSV(); return false;">
+                            <i class="fas fa-file-csv"></i> As CSV
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="app.exportToExcel(); return false;">
+                            <i class="fas fa-file-excel"></i> As Excel
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="app.exportToPDF(); return false;">
+                            <i class="fas fa-file-pdf"></i> As PDF
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="app.exportToPPT(); return false;">
+                            <i class="fas fa-file-powerpoint"></i> As PowerPoint
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="app.exportToWord(); return false;">
+                            <i class="fas fa-file-word"></i> As Word
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="app.exportToJSON(); return false;">
+                            <i class="fas fa-file-code"></i> As JSON
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar for Pages -->
+            <div class="col-md-2 bg-light sidebar" id="pagesSidebar">
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                    <h5 class="mb-0">Pages</h5>
+                    <button class="btn btn-sm btn-primary" onclick="app.showAddPageModal()">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div id="pagesList" class="list-group list-group-flush">
+                    <!-- Pages will be dynamically added here -->
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-md-10">
+                <div class="p-3">
+                    <!-- Toolbar -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <h4 id="currentPageName" class="mb-0">Page 1</h4>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="app.editPageName()" title="Rename Page">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-secondary" onclick="app.editActivityColumnName()" title="Rename Activity/Task Column">
+                                <i class="fas fa-cog"></i> Settings
+                            </button>
+                            <button class="btn btn-outline-info" onclick="app.manageSections()">
+                                <i class="fas fa-layer-group"></i> Sections
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="app.addColumn()">
+                                <i class="fas fa-plus"></i> Add Column
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="app.addRow()">
+                                <i class="fas fa-plus"></i> Add Row
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="app.deletePage()">
+                                <i class="fas fa-trash"></i> Delete Page
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- RACI Matrix Table -->
+                    <div class="table-responsive">
+                        <!-- Search Box -->
+                        <div class="search-box-container mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" 
+                                       id="rowSearchInput" 
+                                       class="form-control" 
+                                       placeholder="Search rows by activity/task name..."
+                                       oninput="app.filterRows()"
+                                       onkeydown="event.stopPropagation()">
+                                <button class="btn btn-outline-secondary" 
+                                        onclick="app.clearSearch()" 
+                                        id="clearSearchBtn"
+                                        style="display: none;"
+                                        title="Clear search">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted" id="searchResultsText"></small>
+                        </div>
+                        
+                        <!-- Bulk Action Bar -->
+                        <div id="bulkActionBar" class="bulk-action-bar" style="display: none;">
+                            <div class="d-flex align-items-center gap-3">
+                                <div>
+                                    <i class="fas fa-check-square"></i>
+                                    <strong id="selectedCount">0</strong> row(s) selected
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <label class="mb-0">Assign to section:</label>
+                                    <select id="bulkSectionSelect" class="form-select form-select-sm" style="width: 200px;">
+                                        <option value="">No Section</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-primary" onclick="app.bulkAssignSection()">
+                                        <i class="fas fa-check"></i> Apply
+                                    </button>
+                                    <div class="vr"></div>
+                                    <button class="btn btn-sm btn-danger" onclick="app.bulkDeleteRows()" title="Delete selected rows">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                    <button class="btn btn-sm btn-secondary" onclick="app.clearSelection()">
+                                        <i class="fas fa-times"></i> Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <table id="raciTable" class="table table-bordered table-hover raci-table">
+                            <thead class="table-light">
+                                <tr id="tableHeader">
+                                    <th class="checkbox-column">
+                                        <input type="checkbox" id="selectAll" onclick="app.toggleSelectAll()" title="Select All">
+                                    </th>
+                                    <th class="activity-column">Activity/Task</th>
+                                    <!-- Column headers will be dynamically added -->
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- Rows will be dynamically added -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Column Modal -->
+    <div class="modal fade" id="columnModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Column Configuration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Column Name</label>
+                        <input type="text" id="columnName" class="form-control" placeholder="Enter column name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Column Type</label>
+                        <select id="columnType" class="form-select">
+                            <option value="stakeholder">Stakeholder/Party</option>
+                            <option value="information">Information</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description (Optional)</label>
+                        <textarea id="columnDescription" class="form-control" rows="2" placeholder="Enter description"></textarea>
+                    </div>
+                    <input type="hidden" id="columnId">
+                    <input type="hidden" id="columnIndex">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="deleteColumnBtn" onclick="app.deleteColumn()">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="app.saveColumn()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Row Modal -->
+    <div class="modal fade" id="rowModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Row Configuration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="bulkRowMode" onchange="app.toggleBulkRowMode()">
+                            <label class="form-check-label" for="bulkRowMode">
+                                <strong>Bulk Add Mode</strong> (paste multiple rows)
+                            </label>
+                        </div>
+                    </div>
+                    <div id="singleRowInputs">
+                        <div class="mb-3">
+                            <label class="form-label">Activity/Task Name</label>
+                            <input type="text" id="rowName" class="form-control" placeholder="Enter activity/task name">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-layer-group"></i> Section (Optional)
+                                <span class="badge bg-info ms-2">Groups rows together</span>
+                            </label>
+                            <select id="rowSection" class="form-select">
+                                <option value="">No Section</option>
+                            </select>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Assign this row to a section to group related activities. 
+                                Manage sections via the <strong>Sections</strong> button in the toolbar.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description (Optional)</label>
+                            <textarea id="rowDescription" class="form-control" rows="2" placeholder="Enter description"></textarea>
+                        </div>
+                    </div>
+                    <div id="bulkRowInputs" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Paste Activities/Tasks (one per line)</label>
+                            <textarea id="bulkRowData" class="form-control" rows="10" placeholder="Paste your tasks here, one per line:
+Project Planning
+Requirement Gathering
+Design Review
+Development
+Testing
+Deployment"></textarea>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Copy tasks from Excel, Notepad, or any text source. Each line will create a new row.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-layer-group"></i> Assign to Section (Optional)
+                                <span class="badge bg-info ms-2">Applies to all rows</span>
+                            </label>
+                            <select id="bulkRowSection" class="form-select">
+                                <option value="">No Section</option>
+                            </select>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> All bulk-added rows will be assigned to the selected section.
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="rowId">
+                    <input type="hidden" id="rowIndex">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="deleteRowBtn" onclick="app.deleteRow()">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="app.saveRow()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Page Modal -->
+    <div class="modal fade" id="pageModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="pageModalTitle">Add New Page</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Page Name</label>
+                        <input type="text" id="pageName" class="form-control" placeholder="Enter page name">
+                    </div>
+                    <input type="hidden" id="editPageIndex">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="app.savePage()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RACI Cell Modal -->
+    <div class="modal fade" id="raciModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">RACI Assignment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="raciCheckboxes" class="d-grid gap-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="R" id="raciR">
+                            <label class="form-check-label" for="raciR">
+                                <span class="raci-badge raci-r-selected me-2">R</span>
+                                <strong>Responsible</strong> - Does the work
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="A" id="raciA">
+                            <label class="form-check-label" for="raciA">
+                                <span class="raci-badge raci-a-selected me-2">A</span>
+                                <strong>Accountable</strong> - Approves
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="C" id="raciC">
+                            <label class="form-check-label" for="raciC">
+                                <span class="raci-badge raci-c-selected me-2">C</span>
+                                <strong>Consulted</strong> - Provides input
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="I" id="raciI">
+                            <label class="form-check-label" for="raciI">
+                                <span class="raci-badge raci-i-selected me-2">I</span>
+                                <strong>Informed</strong> - Kept informed
+                            </label>
+                        </div>
+                    </div>
+                    <input type="hidden" id="currentRowId">
+                    <input type="hidden" id="currentColId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="app.saveRACICell()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Column Name Modal -->
+    <div class="modal fade" id="activityColumnModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Page Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Activity/Task Column Name</label>
+                        <input type="text" id="activityColumnName" class="form-control" placeholder="e.g., Activity/Task, Process, Deliverable">
+                        <div class="form-text">
+                            This is the name of the first column that lists your activities or tasks.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="app.saveActivityColumnName()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sections Management Modal -->
+    <div class="modal fade" id="sectionsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Manage Sections</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <h6 class="alert-heading"><i class="fas fa-question-circle"></i> What are Sections?</h6>
+                        <p class="mb-2">Sections group related rows together for better organization. They appear as bold headers in your RACI matrix.</p>
+                        <p class="mb-0"><strong>How to use:</strong></p>
+                        <ol class="mb-0 ps-3">
+                            <li>Create sections below (e.g., "Planning", "Execution", "Closure")</li>
+                            <li>When adding/editing rows, assign them to a section via the dropdown</li>
+                            <li>Or hover over any row and click the <i class="fas fa-arrows-alt"></i> icon to move it</li>
+                        </ol>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Your Sections</h6>
+                        <button class="btn btn-sm btn-primary" onclick="app.addSectionInModal()">
+                            <i class="fas fa-plus"></i> Add Section
+                        </button>
+                    </div>
+                    <div id="sectionsList" class="list-group">
+                        <!-- Sections will be listed here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Excel/CSV Sheet Selection Modal -->
+    <div class="modal fade" id="sheetSelectionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Import from Excel/CSV</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <h6 class="alert-heading"><i class="fas fa-info-circle"></i> Import Instructions</h6>
+                        <p class="mb-2">Select one or more sheets to import. We'll automatically detect columns with RACI values (R, A, C, I).</p>
+                        <ul class="mb-0">
+                            <li><strong>Stakeholder columns:</strong> Columns with RACI values will be marked as stakeholder/party columns</li>
+                            <li><strong>Information columns:</strong> Other columns will be imported as information columns</li>
+                            <li><strong>First column:</strong> Will be used as the activity/task name</li>
+                        </ul>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Import Mode:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="importMode" id="importModeNewProject" value="new" checked>
+                            <label class="form-check-label" for="importModeNewProject">
+                                Import as new project
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="importMode" id="importModePages" value="pages">
+                            <label class="form-check-label" for="importModePages">
+                                Add as pages to current project
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">File: <span id="excelFileName" class="text-muted"></span></label>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold mb-0">Select Sheets to Import:</label>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-primary" onclick="app.toggleAllSheets(true)">
+                                    <i class="fas fa-check-square"></i> Select All
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="app.toggleAllSheets(false)">
+                                    <i class="fas fa-square"></i> Deselect All
+                                </button>
+                            </div>
+                        </div>
+                        <div class="alert alert-info mb-2">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Tip:</strong> Click on a sheet to expand and configure header/data row settings individually.
+                        </div>
+                        <div id="sheetsList" class="list-group">
+                            <!-- Sheets will be listed here as checkboxes -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="app.processExcelImport()">
+                        <i class="fas fa-file-import"></i> Import Selected Sheets
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Move Row to Section Modal -->
+    <div class="modal fade" id="moveRowModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-arrows-alt"></i> Move Row to Section
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>How it works:</strong> Sections group related rows together. 
+                        They appear as bold headers in your matrix.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Select Section</label>
+                        <select id="moveToSection" class="form-select">
+                            <option value="">No Section (Ungrouped)</option>
+                        </select>
+                    </div>
+                    <div class="text-muted small">
+                        <i class="fas fa-lightbulb"></i> 
+                        Don't see your section? Click the <strong>Sections</strong> button in the toolbar to create one.
+                    </div>
+                    <input type="hidden" id="moveRowId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="app.saveRowMove()">
+                        <i class="fas fa-check"></i> Move Row
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSV Export Modal -->
+    <div class="modal fade" id="csvExportModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-file-csv"></i> Export to CSV
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>CSV Export:</strong> Select which page you want to export as a CSV file.
+                    </div>
+                    <div class="mb-3">
+                        <label for="csvPageSelect" class="form-label">Select Page to Export</label>
+                        <select id="csvPageSelect" class="form-select">
+                            <!-- Pages will be populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="app.confirmCSVExport()">
+                        <i class="fas fa-download"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Multi-Page Export Modal (for Excel, PowerPoint, PDF, Word) -->
+    <div class="modal fade" id="multiPageExportModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="multiPageExportTitle">
+                        <i class="fas fa-file-export"></i> Export
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Select Pages:</strong> Choose which pages to include in the export.
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold mb-0">Pages to Export:</label>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-primary" onclick="app.toggleAllExportPages(true)">
+                                    <i class="fas fa-check-square"></i> Check All
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="app.toggleAllExportPages(false)">
+                                    <i class="fas fa-square"></i> Uncheck All
+                                </button>
+                            </div>
+                        </div>
+                        <div id="exportPagesList" class="list-group" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Pages will be populated dynamically as checkboxes -->
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="exportWithIndent" checked>
+                            <label class="form-check-label" for="exportWithIndent">
+                                <i class="fas fa-indent"></i> Include indentation for sub-sections and rows
+                            </label>
+                        </div>
+                        <small class="text-muted">When checked, hierarchical structure will be shown with indentation</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="confirmExportBtn" onclick="app.confirmMultiPageExport()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Conflict Modal -->
+    <div class="modal fade" id="importConflictModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle"></i> Project Already Exists
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning mb-3">
+                        <i class="fas fa-info-circle"></i>
+                        A project named <strong id="conflictProjectName"></strong> already exists in your workspace.
+                    </div>
+                    <p class="mb-3">What would you like to do?</p>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-danger btn-lg" onclick="app.handleImportConflict('overwrite')">
+                            <i class="fas fa-sync-alt"></i> Overwrite Existing Project
+                            <div class="small text-white-50">⚠️ This will permanently delete the existing project</div>
+                        </button>
+                        <button type="button" class="btn btn-success btn-lg" onclick="app.handleImportConflict('new')">
+                            <i class="fas fa-plus-circle"></i> Import as New Project
+                            <div class="small text-white-50">Creates a new project with a numbered name</div>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg" onclick="app.handleImportConflict('cancel')">
+                            <i class="fas fa-times"></i> Cancel Import
+                            <div class="small text-white-50">Don't import anything</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file inputs for import -->
+    <input type="file" id="fileInput" accept=".raci,.json" style="display: none;">
+    <input type="file" id="excelFileInput" accept=".xls,.xlsx,.csv" style="display: none;">
+
+    <!-- Footer -->
+    <footer class="bg-light border-top mt-auto py-3">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-4 text-center text-md-start">
+                    <small class="text-muted">
+                        <i class="fas fa-copyright"></i> 2026 EZ-RACI Matrix Builder
+                    </small>
+                </div>
+                <div class="col-md-4 text-center">
+                    <small class="text-muted">
+                        Version 1.0.0 | Built with <i class="fas fa-heart text-danger"></i> for project managers
+                    </small>
+                </div>
+                <div class="col-md-4 text-center text-md-end">
+                    <small class="text-muted">
+                        Powered by Bootstrap, SheetJS & jsPDF
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- SheetJS with styling for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- PptxGenJS for PowerPoint export -->
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    
+    <!-- html-docx-js for Word export -->
+    <script src="https://cdn.jsdelivr.net/npm/html-docx-js@0.3.1/dist/html-docx.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <!-- Application JS -->
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,746 @@
+/* RACI Matrix Builder - Custom Styles */
+
+:root {
+    --primary-color: #2980b9;
+    --secondary-color: #3498db;
+    --success-color: #27ae60;
+    --danger-color: #e74c3c;
+    --warning-color: #f39c12;
+    --info-color: #16a085;
+    --light-bg: #ecf0f1;
+    --dark-text: #2c3e50;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main content area should grow to push footer down */
+.container-fluid {
+    flex: 1 0 auto;
+}
+
+/* Footer styles */
+footer {
+    flex-shrink: 0;
+    background-color: #f8f9fa;
+}
+
+footer small {
+    font-size: 0.85rem;
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Menu Bar Toggle Button */
+#menuToggleBtn {
+    color: #212529;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+}
+
+#menuToggleBtn:hover {
+    color: var(--primary-color);
+    background-color: rgba(0,0,0,0.05);
+}
+
+#menuToggleBtn:focus {
+    box-shadow: none;
+}
+
+/* Sidebar */
+.sidebar {
+    min-height: calc(100vh - 56px);
+    border-right: 1px solid #dee2e6;
+    padding: 0;
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+.sidebar.sidebar-collapsed {
+    max-width: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    flex: 0 0 0% !important;
+}
+
+.sidebar.sidebar-collapsed > * {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.sidebar h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--dark-text);
+}
+
+.sidebar .list-group-item {
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s;
+}
+
+.sidebar .list-group-item:hover {
+    background-color: #e9ecef;
+}
+
+.sidebar .list-group-item.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Main Content */
+.col-md-10, .col-md-12 {
+    transition: all 0.3s ease-in-out;
+}
+
+.table-responsive {
+    max-height: calc(100vh - 200px);
+    overflow: auto;
+}
+
+/* RACI Table */
+.raci-table {
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+.raci-table th {
+    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    vertical-align: middle;
+    min-width: 120px;
+    padding: 0.75rem;
+}
+
+.raci-table th.activity-column {
+    min-width: 250px;
+    max-width: 300px;
+    position: sticky;
+    left: 40px;
+    z-index: 11;
+    background-color: #f8f9fa;
+}
+
+.raci-table td.activity-column {
+    position: sticky;
+    left: 40px;
+    background-color: #fff;
+    font-weight: 600;
+    min-width: 250px;
+    max-width: 300px;
+    z-index: 5;
+}
+
+.raci-table th .btn-link {
+    padding: 0;
+    color: #6c757d;
+    text-decoration: none;
+}
+
+.raci-table th .btn-link:hover {
+    color: var(--primary-color);
+}
+
+.column-type-badge {
+    margin-top: 0.25rem;
+}
+
+.column-type-badge .badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.column-stakeholder {
+    background-color: #e3f2fd;
+}
+
+.column-information {
+    background-color: #e0f2f1;
+}
+
+/* RACI Cells */
+.raci-cell {
+    text-align: center;
+    vertical-align: middle;
+    padding: 0.5rem;
+    transition: all 0.2s;
+    min-width: 120px;
+}
+
+.raci-cell:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.02);
+}
+
+.raci-cell.info-cell {
+    background-color: #fff9e6;
+    text-align: left;
+}
+
+.raci-cell.info-cell:hover {
+    background-color: #fff3cd;
+}
+
+/* RACI Badge Styling */
+.raci-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    margin: 0 2px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    min-width: 28px;
+    text-align: center;
+    border: 2px solid transparent;
+}
+
+/* Unselected RACI letters - gray background */
+.raci-badge.raci-unselected {
+    background-color: #e0e0e0;
+    color: #999999;
+    border-color: #d0d0d0;
+}
+
+/* Selected R - Responsible - Green */
+.raci-badge.raci-r-selected {
+    background-color: #27ae60;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(39, 174, 96, 0.3);
+    border-color: #229954;
+}
+
+/* Selected A - Accountable - Red/Orange */
+.raci-badge.raci-a-selected {
+    background-color: #e74c3c;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
+    border-color: #c0392b;
+}
+
+/* Selected C - Consulted - Blue */
+.raci-badge.raci-c-selected {
+    background-color: #3498db;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+    border-color: #2980b9;
+}
+
+/* Selected I - Informed - Purple */
+.raci-badge.raci-i-selected {
+    background-color: #9b59b6;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(155, 89, 182, 0.3);
+    border-color: #8e44ad;
+}
+
+/* Hover effect on individual badges - make them clearly clickable */
+.raci-badge {
+    cursor: pointer;
+    user-select: none;
+}
+
+.raci-badge:hover {
+    transform: scale(1.15);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Hover effects for unselected badges - preview what they'll look like when selected */
+.raci-badge.raci-unselected:hover {
+    border-color: #999999;
+    background-color: #d0d0d0;
+}
+
+/* Badge in modal labels */
+.form-check-label .raci-badge {
+    margin-right: 0.5rem;
+}
+
+/* Buttons */
+.btn {
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-link {
+    text-decoration: none;
+}
+
+/* Modals */
+.modal-header {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--dark-text);
+    margin-bottom: 0.5rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(41, 128, 185, 0.25);
+}
+
+/* RACI Checkboxes */
+#raciCheckboxes .form-check {
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    background-color: #f8f9fa;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+#raciCheckboxes .form-check:hover {
+    background-color: #e9ecef;
+}
+
+#raciCheckboxes .form-check-input {
+    margin-top: 0;
+}
+
+#raciCheckboxes .form-check-input:checked {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+#raciCheckboxes .form-check-label {
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+/* Empty State */
+.table tbody tr td {
+    vertical-align: middle;
+}
+
+.text-muted i {
+    margin-right: 0.5rem;
+}
+
+/* Tooltips */
+[title] {
+    cursor: help;
+}
+
+/* Scrollbar Styling */
+.table-responsive::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        min-height: auto;
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .raci-table th.activity-column,
+    .raci-table td.activity-column {
+        position: static;
+    }
+    
+    .navbar .d-flex {
+        flex-wrap: wrap;
+    }
+    
+    .navbar .btn-group,
+    .navbar .btn {
+        margin-top: 0.5rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .navbar,
+    .sidebar,
+    .btn,
+    button {
+        display: none !important;
+    }
+    
+    .col-md-10 {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .table-responsive {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+    
+    .raci-table {
+        page-break-inside: auto;
+    }
+    
+    .raci-table tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal.show .modal-dialog {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Loading State */
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Success/Error Messages */
+.alert {
+    border-radius: 0.5rem;
+    border: none;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Custom Dropdown */
+.dropdown-menu {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border: none;
+}
+
+.dropdown-item {
+    transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: var(--light-bg);
+    color: var(--primary-color);
+}
+
+.dropdown-item i {
+    margin-right: 0.5rem;
+    width: 16px;
+}
+
+/* Input Focus Glow */
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(41, 128, 185, 0.25);
+}
+
+/* Utility Classes */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Page List Item Hover Effect */
+.list-group-item-action {
+    position: relative;
+}
+
+.list-group-item-action::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: var(--primary-color);
+    transform: scaleY(0);
+    transition: transform 0.2s;
+}
+
+.list-group-item-action.active::before,
+.list-group-item-action:hover::before {
+    transform: scaleY(1);
+}
+
+/* Page edit button in sidebar */
+.list-group-item-action .btn-link {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.list-group-item-action:hover .btn-link,
+.list-group-item-action.active .btn-link {
+    opacity: 1;
+}
+
+.list-group-item-action .btn-link:hover {
+    transform: scale(1.1);
+}
+
+/* Section Headers in Table */
+.section-header-row {
+    background-color: #f8f9fa;
+}
+
+.section-header {
+    background-color: #e9ecef;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    border-left: 4px solid var(--primary-color);
+    color: var(--dark-text);
+}
+
+.section-header i {
+    margin-right: 0.5rem;
+    color: var(--primary-color);
+}
+
+.section-header .text-muted {
+    font-weight: 400;
+    font-size: 0.9rem;
+}
+
+.section-header-row:hover {
+    background-color: #f8f9fa;
+}
+
+/* Checkbox Column */
+.checkbox-column {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    text-align: center;
+    vertical-align: middle;
+    background-color: #f8f9fa;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    border-right: 2px solid #dee2e6;
+}
+
+.raci-table tbody tr td.checkbox-column {
+    background-color: #ffffff;
+}
+
+.raci-table tbody tr:hover td.checkbox-column {
+    background-color: #f8f9fa;
+}
+
+.section-header-checkbox {
+    width: 40px;
+    background-color: #e9ecef;
+    border-right: 1px solid #dee2e6;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+}
+
+.checkbox-column input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+/* Bulk Action Bar */
+.bulk-action-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.bulk-action-bar .form-select {
+    background-color: white;
+}
+
+.bulk-action-bar .btn {
+    border: none;
+}
+
+.bulk-action-bar .btn-primary {
+    background-color: #27ae60;
+}
+
+.bulk-action-bar .btn-primary:hover {
+    background-color: #229954;
+}
+
+.bulk-action-bar .btn-secondary {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.bulk-action-bar .btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Row action buttons */
+.activity-column .row-actions {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.activity-column:hover .row-actions,
+tr:hover .row-actions {
+    opacity: 1;
+}
+
+.activity-column .btn-outline-secondary,
+.activity-column .btn-outline-primary {
+    border: 1px solid #dee2e6;
+}
+
+.activity-column .btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+.activity-column .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* Project Switcher */
+#projectSwitcherBtn {
+    min-width: 200px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#currentProjectDisplay {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 150px;
+    display: inline-block;
+}
+
+#projectList {
+    min-width: 250px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#projectList .dropdown-item.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+#projectList .dropdown-item:not(.active):hover {
+    background-color: #f8f9fa;
+}
+
+#projectList .btn-link {
+    padding: 0;
+    margin-left: 10px;
+    text-decoration: none;
+}
+
+#projectList .btn-link:hover {
+    color: var(--danger-color);
+}
