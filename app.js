@@ -1307,7 +1307,12 @@ class RACIApp {
             <th class="checkbox-column">
                 <input type="checkbox" id="selectAll" onclick="app.toggleSelectAll()" title="Select All">
             </th>
-            <th class="activity-column">${activityColName}</th>
+            <th class="activity-column">
+                <span>${activityColName}</span>
+                <button class="btn btn-sm btn-link p-0 ms-2" onclick="app.editActivityColumnName()" title="Rename this column">
+                    <i class="fas fa-edit text-secondary"></i>
+                </button>
+            </th>
         `;
 
         page.columns.forEach((col, index) => {

@@ -138,6 +138,19 @@ footer small {
     background-color: #f8f9fa;
 }
 
+.raci-table th.activity-column button {
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.raci-table th.activity-column button:hover {
+    opacity: 1;
+}
+
+.raci-table th.activity-column button:focus {
+    box-shadow: none;
+}
+
 .raci-table td.activity-column {
     position: sticky;
     left: 40px;
