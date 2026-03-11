@@ -845,9 +845,17 @@ class RACIApp {
         document.getElementById('columnName').value = '';
         document.getElementById('columnType').value = 'stakeholder';
         document.getElementById('columnDescription').value = '';
+        document.getElementById('bulkColumnData').value = '';
         document.getElementById('columnId').value = '';
         document.getElementById('columnIndex').value = '';
+        document.getElementById('bulkColumnMode').checked = false;
         document.getElementById('deleteColumnBtn').style.display = 'none';
+        document.getElementById('singleColumnInputs').style.display = 'block';
+        document.getElementById('bulkColumnStep1').style.display = 'none';
+        document.getElementById('bulkColumnStep2').style.display = 'none';
+        document.getElementById('bulkColumnNextBtn').style.display = 'none';
+        document.getElementById('bulkColumnBackBtn').style.display = 'none';
+        document.getElementById('saveColumnBtn').style.display = 'inline-block';
         this.modals.column.show();
     }
 
@@ -860,43 +868,86 @@ class RACIApp {
         document.getElementById('columnDescription').value = column.description || '';
         document.getElementById('columnId').value = column.id;
         document.getElementById('columnIndex').value = index;
+        document.getElementById('bulkColumnMode').checked = false;
         document.getElementById('deleteColumnBtn').style.display = 'block';
+        document.getElementById('singleColumnInputs').style.display = 'block';
+        document.getElementById('bulkColumnStep1').style.display = 'none';
+        document.getElementById('bulkColumnStep2').style.display = 'none';
+        document.getElementById('bulkColumnNextBtn').style.display = 'none';
+        document.getElementById('bulkColumnBackBtn').style.display = 'none';
+        document.getElementById('saveColumnBtn').style.display = 'inline-block';
         this.modals.column.show();
     }
 
     saveColumn() {
         const page = this.getCurrentPage();
-        const name = document.getElementById('columnName').value.trim();
-        const type = document.getElementById('columnType').value;
-        const description = document.getElementById('columnDescription').value.trim();
+        const bulkMode = document.getElementById('bulkColumnMode').checked;
         const columnId = document.getElementById('columnId').value;
         const columnIndex = document.getElementById('columnIndex').value;
 
-        if (!name) {
-            alert('Please enter a column name');
-            return;
-        }
+        if (bulkMode) {
+            // Bulk add mode - collect data from tagging table
+            const table = document.getElementById('bulkColumnTaggingTable');
+            const rows = table.querySelectorAll('tr');
+            
+            if (rows.length === 0) {
+                alert('No columns to add. Please go back and enter column names.');
+                return;
+            }
 
-        if (columnId) {
-            // Edit existing column
-            const column = page.columns[columnIndex];
-            column.name = name;
-            column.type = type;
-            column.description = description;
+            let addedCount = 0;
+            rows.forEach((row, index) => {
+                const nameCell = row.cells[0];
+                const typeSelect = row.querySelector('select');
+                const columnName = nameCell.textContent.trim();
+                const columnType = typeSelect.value;
+
+                const newColumn = {
+                    id: this.generateId(),
+                    name: columnName,
+                    type: columnType,
+                    description: ''
+                };
+                page.columns.push(newColumn);
+                addedCount++;
+            });
+
+            this.modals.column.hide();
+            this.render();
+            this.saveToLocalStorage();
+            alert(`Successfully added ${addedCount} column${addedCount > 1 ? 's' : ''}!`);
         } else {
-            // Add new column
-            const newColumn = {
-                id: this.generateId(),
-                name: name,
-                type: type,
-                description: description
-            };
-            page.columns.push(newColumn);
-        }
+            // Single column mode
+            const name = document.getElementById('columnName').value.trim();
+            const type = document.getElementById('columnType').value;
+            const description = document.getElementById('columnDescription').value.trim();
 
-        this.modals.column.hide();
-        this.render();
-        this.saveToLocalStorage();
+            if (!name) {
+                alert('Please enter a column name');
+                return;
+            }
+
+            if (columnId) {
+                // Edit existing column
+                const column = page.columns[columnIndex];
+                column.name = name;
+                column.type = type;
+                column.description = description;
+            } else {
+                // Add new column
+                const newColumn = {
+                    id: this.generateId(),
+                    name: name,
+                    type: type,
+                    description: description
+                };
+                page.columns.push(newColumn);
+            }
+
+            this.modals.column.hide();
+            this.render();
+            this.saveToLocalStorage();
+        }
     }
 
     deleteColumn() {
@@ -915,6 +966,107 @@ class RACIApp {
             this.render();
             this.saveToLocalStorage();
         }
+    }
+
+    deleteColumnDirect(index) {
+        const page = this.getCurrentPage();
+        const column = page.columns[index];
+
+        if (confirm(`Delete column "${column.name}"?\n\nThis will remove all data in this column from all rows.`)) {
+            // Remove column from all rows
+            page.rows.forEach(row => {
+                delete row.cells[column.id];
+            });
+            
+            page.columns.splice(index, 1);
+            this.render();
+            this.saveToLocalStorage();
+        }
+    }
+
+    toggleBulkColumnMode() {
+        const bulkMode = document.getElementById('bulkColumnMode').checked;
+        const singleInputs = document.getElementById('singleColumnInputs');
+        const bulkStep1 = document.getElementById('bulkColumnStep1');
+        const bulkStep2 = document.getElementById('bulkColumnStep2');
+        const deleteBtn = document.getElementById('deleteColumnBtn');
+        const nextBtn = document.getElementById('bulkColumnNextBtn');
+        const saveBtn = document.getElementById('saveColumnBtn');
+        
+        if (bulkMode) {
+            singleInputs.style.display = 'none';
+            bulkStep1.style.display = 'block';
+            bulkStep2.style.display = 'none';
+            deleteBtn.style.display = 'none';
+            nextBtn.style.display = 'inline-block';
+            saveBtn.style.display = 'none';
+        } else {
+            singleInputs.style.display = 'block';
+            bulkStep1.style.display = 'none';
+            bulkStep2.style.display = 'none';
+            nextBtn.style.display = 'none';
+            saveBtn.style.display = 'inline-block';
+        }
+    }
+
+    bulkColumnNext() {
+        const bulkData = document.getElementById('bulkColumnData').value.trim();
+        
+        if (!bulkData) {
+            alert('Please paste some column names (one per line)');
+            return;
+        }
+
+        // Split by lines and filter empty lines
+        const lines = bulkData.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+
+        if (lines.length === 0) {
+            alert('No valid column names found. Please enter one column name per line.');
+            return;
+        }
+
+        // Populate tagging table
+        const table = document.getElementById('bulkColumnTaggingTable');
+        table.innerHTML = '';
+        
+        lines.forEach((line, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="align-middle">${line}</td>
+                <td>
+                    <select class="form-select form-select-sm" id="columnType_${index}">
+                        <option value="stakeholder">Stakeholder/Party</option>
+                        <option value="information">Information</option>
+                    </select>
+                </td>
+            `;
+            table.appendChild(tr);
+        });
+
+        // Show step 2
+        document.getElementById('bulkColumnStep1').style.display = 'none';
+        document.getElementById('bulkColumnStep2').style.display = 'block';
+        document.getElementById('bulkColumnNextBtn').style.display = 'none';
+        document.getElementById('bulkColumnBackBtn').style.display = 'inline-block';
+        document.getElementById('saveColumnBtn').style.display = 'inline-block';
+    }
+
+    bulkColumnGoBack() {
+        document.getElementById('bulkColumnStep1').style.display = 'block';
+        document.getElementById('bulkColumnStep2').style.display = 'none';
+        document.getElementById('bulkColumnNextBtn').style.display = 'inline-block';
+        document.getElementById('bulkColumnBackBtn').style.display = 'none';
+        document.getElementById('saveColumnBtn').style.display = 'none';
+    }
+
+    setBulkColumnType(type) {
+        const table = document.getElementById('bulkColumnTaggingTable');
+        const selects = table.querySelectorAll('select');
+        selects.forEach(select => {
+            select.value = type;
+        });
     }
 
     // ========== ROW MANAGEMENT ==========
@@ -1308,10 +1460,12 @@ class RACIApp {
                 <input type="checkbox" id="selectAll" onclick="app.toggleSelectAll()" title="Select All">
             </th>
             <th class="activity-column">
-                <span>${activityColName}</span>
-                <button class="btn btn-sm btn-link p-0 ms-2" onclick="app.editActivityColumnName()" title="Rename this column">
-                    <i class="fas fa-edit text-secondary"></i>
-                </button>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>${activityColName}</span>
+                    <button class="btn btn-sm btn-link" onclick="app.editActivityColumnName()" title="Rename this column">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
             </th>
         `;
 
@@ -1321,9 +1475,14 @@ class RACIApp {
             th.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center">
                     <span title="${col.description || ''}">${col.name}</span>
-                    <button class="btn btn-sm btn-link" onclick="app.editColumn(${index})">
-                        <i class="fas fa-edit"></i>
-                    </button>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-link" onclick="app.editColumn(${index})" title="Edit column">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-link text-danger" onclick="app.deleteColumnDirect(${index})" title="Delete column">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="column-type-badge">
                     <span class="badge ${col.type === 'stakeholder' ? 'bg-primary' : 'bg-info'}">${col.type}</span>
