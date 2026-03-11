@@ -211,10 +211,29 @@ footer small {
 .raci-cell.info-cell {
     background-color: #fff9e6;
     text-align: left;
+    position: relative;
 }
 
 .raci-cell.info-cell:hover {
     background-color: #fff3cd;
+    box-shadow: inset 0 0 0 2px rgba(255, 193, 7, 0.5);
+}
+
+.raci-cell.info-cell[contenteditable="true"] {
+    background-color: #ffffff;
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+    box-shadow: 0 0 8px rgba(41, 128, 185, 0.3);
+}
+
+.raci-cell.info-cell:empty:before {
+    content: 'Click to edit';
+    color: #999;
+    font-style: italic;
+}
+
+.raci-cell.info-cell[contenteditable="true"]:empty:before {
+    content: 'Type here...';
 }
 
 /* RACI Badge Styling */

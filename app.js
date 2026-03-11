@@ -1402,6 +1402,79 @@ class RACIApp {
         }
     }
 
+    makeInfoCellEditable(td, rowId, colId) {
+        // Don't make already editable cells editable again
+        if (td.contentEditable === 'true') {
+            return;
+        }
+        
+        td.contentEditable = true;
+        td.focus();
+        
+        // Select all text in the cell
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(td);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        
+        // Store original value in case user cancels
+        const originalValue = td.textContent;
+        let isSaving = false;
+        
+        // Save on blur (clicking away)
+        const saveEdit = () => {
+            if (isSaving) return;
+            isSaving = true;
+            
+            td.contentEditable = false;
+            const newValue = td.textContent.trim();
+            
+            const page = this.getCurrentPage();
+            const row = page.rows.find(r => r.id === rowId);
+            
+            if (newValue) {
+                row.cells[colId] = [newValue];
+            } else {
+                delete row.cells[colId];
+            }
+            
+            this.saveToLocalStorage();
+            // Don't re-render, just update the display
+            td.textContent = newValue || '';
+            
+            // Remove event listeners
+            td.removeEventListener('blur', saveEdit);
+            td.removeEventListener('keydown', handleKeyDown);
+        };
+        
+        // Cancel on Escape
+        const cancelEdit = () => {
+            if (isSaving) return;
+            
+            td.contentEditable = false;
+            td.textContent = originalValue;
+            
+            // Remove event listeners
+            td.removeEventListener('blur', saveEdit);
+            td.removeEventListener('keydown', handleKeyDown);
+        };
+        
+        // Handle Enter and Escape keys
+        const handleKeyDown = (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                saveEdit();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                cancelEdit();
+            }
+        };
+        
+        td.addEventListener('blur', saveEdit);
+        td.addEventListener('keydown', handleKeyDown);
+    }
+
     // ========== RENDERING ==========
     render() {
         this.updateProjectName();
@@ -1638,10 +1711,12 @@ class RACIApp {
                     
                     td.innerHTML = badgesHtml;
                 } else {
-                    td.innerHTML = cellValue[0] || '';
-                    td.onclick = () => this.editInfoCell(row.id, col.id);
-                    td.style.cursor = 'pointer';
+                    // Information column - inline editable
+                    td.textContent = cellValue[0] || '';
+                    td.onclick = () => this.makeInfoCellEditable(td, row.id, col.id);
+                    td.style.cursor = 'text';
                     td.className += ' info-cell';
+                    td.title = 'Click to edit';
                 }
                 
                 tr.appendChild(td);
